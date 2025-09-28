@@ -1,0 +1,187 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INAFORP S.A.C | Verificador de Certificado</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border: 10px solid #d3d3d3;
+            border-image: linear-gradient(to bottom right, #1a3c5e, #28a745) 1;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            margin: 32px auto;
+            box-sizing: border-box;
+        }
+        .header {
+            margin-bottom: 20px;
+            color: #1a3c5e;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .verified {
+            color: #28a745;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .certificate-details {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .certificate-details p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #333;
+        }
+        .pdf-viewer {
+            margin: 20px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .pdf-viewer iframe {
+            width: 100%;
+            min-height: 350px;
+            height: 60vw;
+            max-height: 600px;
+            border: none;
+        }
+        @media (max-width: 900px) {
+            .container {
+                max-width: 98vw;
+                padding: 10px;
+                border-width: 5px;
+            }
+            .certificate-details {
+                padding: 10px;
+                font-size: 1em;
+            }
+            .pdf-viewer iframe {
+                height: 50vw;
+                min-height: 220px;
+                max-height: 350px;
+            }
+            .header, .verified {
+                font-size: 1.1em;
+            }
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 100vw;
+                padding: 2vw;
+                border-width: 2px;
+            }
+            .certificate-details {
+                padding: 4px;
+                font-size: 0.95em;
+            }
+            .pdf-viewer iframe {
+                height: 40vw;
+                min-height: 120px;
+                max-height: 220px;
+            }
+            .header, .verified {
+                font-size: 1em;
+            }
+            .download-btn {
+                font-size: 0.95em;
+                padding: 8px 12px;
+            }
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">INAFORP S.A.C | Verificador de Certificado</div>
+        <div class="verified">Certificado Verificado</div>
+        <div class="certificate-details">
+            <div style="text-align:left; font-size:1.15em; line-height:1.7;">
+                <span style="font-size:1.1em;">🛡️ <b>INAFORP S.A.C</b></span><br>
+                <span style="font-size:1.3em; font-weight:bold;">OPERADOR DE SISTEMAS DE ALARMAS</span><br>
+                <span style="font-size:1.1em;">👤 Santur Mogollón, Joseph</span><br>
+                <span>Emitido: Lima, 18 de septiembre del 2025</span><br>
+                <span>ID Credencial: <b>8E5832828189D1CE552030E1043351D9</b> <span style="font-size:1em; cursor:pointer;" onclick="navigator.clipboard.writeText('8E5832828189D1CE552030E1043351D9')">📋</span></span><br>
+
+            </div>
+        </div>
+        <div class="pdf-viewer">
+            <iframe src="401277%20Santur%20Mogollon,%20Joseph.pdf" type="application/pdf"></iframe>
+        </div>
+    <a href="401277%20Santur%20Mogollon,%20Joseph.pdf" download class="download-btn">Descargar PDF</a>
+        <div class="footer">
+            <p>INAFORP S.A.C</p>
+        </div>
+    </div>
+</body>
+</html>
